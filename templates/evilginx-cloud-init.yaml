@@ -1,0 +1,52 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+packages:
+  - git
+  - make
+  - gcc
+  - curl
+  - jq
+  - ca-certificates
+
+runcmd:
+  # Ensure hostname resolves locally (prevents sudo warning noise)
+  - grep -q "$(hostname)" /etc/hosts || echo "127.0.1.1 $(hostname)" >> /etc/hosts
+
+  # Disable systemd-resolved to free port 53 for Evilginx
+  - systemctl disable --now systemd-resolved
+  - rm -f /etc/resolv.conf
+  - echo "nameserver 8.8.8.8" > /etc/resolv.conf
+  - echo "nameserver 8.8.4.4" >> /etc/resolv.conf
+
+  # Install Go, clone, and build Evilginx
+  # (export/cd must persist, so a single script block is required)
+  - |
+    set -euo pipefail
+
+    GO_VERSION="${go_version}"
+    GO_SHA256="${go_linux_amd64_tarball_sha256}"
+
+    # Install pinned Go release with checksum verification.
+    curl -fsSL "https://go.dev/dl/go$${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go.tar.gz
+    echo "$${GO_SHA256}  /tmp/go.tar.gz" | sha256sum -c -
+    tar -C /usr/local -xzf /tmp/go.tar.gz
+    rm -f /tmp/go.tar.gz
+    export HOME=/root
+    export PATH=$PATH:/usr/local/go/bin:/root/go/bin
+    export GOPATH=/root/go
+    export XDG_CACHE_HOME=/root/.cache
+    export GOCACHE=/root/.cache/go-build
+    mkdir -p "$GOPATH" "$GOCACHE"
+    echo 'export PATH=$PATH:/usr/local/go/bin:/root/go/bin' >> /etc/profile.d/golang.sh
+
+    # Clone and build Evilginx
+    git clone https://github.com/kgretzky/evilginx2.git /opt/evilginx-src
+    cd /opt/evilginx-src
+    git -c advice.detachedHead=false checkout -- "${evilginx_repo_ref}"
+    make
+    mkdir -p /opt/evilginx
+    cp /opt/evilginx-src/build/evilginx /opt/evilginx/
+    cp -r /opt/evilginx-src/phishlets /opt/evilginx/
+    cp -r /opt/evilginx-src/redirectors /opt/evilginx/

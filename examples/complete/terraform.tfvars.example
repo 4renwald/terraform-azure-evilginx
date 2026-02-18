@@ -1,0 +1,58 @@
+# Required
+domain_name        = "phishing-sim.example.com"
+allowed_ssh_cidr   = "203.0.113.10/32"
+ssh_public_key     = "ssh-rsa REPLACE_ME"
+cloudflare_zone_id = "REPLACE_WITH_CLOUDFLARE_ZONE_ID"
+certbot_email      = "you@example.com"
+landing_cloudflare_api_token_secret_uri = "https://my-key-vault.vault.azure.net/secrets/cloudflare-token/REPLACE_WITH_SECRET_VERSION"
+cloudflare_api_token_key_vault_id = "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.KeyVault/vaults/<vault-name>"
+
+# Prefer setting this as an env var:
+#   export TF_VAR_cloudflare_api_token="REPLACE_ME"
+# If you put it in terraform.tfvars, treat that file as secret.
+# cloudflare_api_token = "REPLACE_ME"
+
+# Optional
+landing_subdomain = "landing"
+landing_additional_subdomains = [
+  "promo",
+  "help",
+]
+# Optional: provide a local folder that includes index.html and assets/*
+# landing_site_dir = "./landing-site"
+# Optional advanced override: explicit file map (path => base64 file content).
+# If set, this takes precedence over landing_site_dir.
+# landing_site_files_base64 = {
+#   "index.html"       = filebase64("${path.module}/landing-site/index.html")
+#   "assets/logo.png"  = filebase64("${path.module}/landing-site/assets/logo.png")
+# }
+# Optional fallback if neither landing_site_dir nor landing_site_files_base64 is set.
+# landing_page_html = <<-EOT
+# <!doctype html><html><body><h1>Landing</h1></body></html>
+# EOT
+
+# Optional overrides
+# location            = "East US"
+# resource_group_name = "rg-redteam-phishing"
+# prefix              = "redteam"
+# landing_vm_size     = "Standard_B2s"
+# evilginx_vm_size    = "Standard_B2s"
+# gophish_vm_size     = "Standard_B2s"
+# ubuntu_image_version = "22.04.202501150"
+# vnet_address_space   = ["10.0.0.0/16"]
+# subnet_address_prefix = ["10.0.1.0/24"]
+# assign_key_vault_role_to_landing_vm = true
+# enable_evilginx_managed_identity    = false
+# enable_gophish_managed_identity     = false
+# landing_cloudflare_proxied          = true
+# cloudflare_dns_allow_overwrite      = false
+# restrict_outbound_traffic           = true
+# log_analytics_workspace_id          = "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.OperationalInsights/workspaces/<workspace>"
+# evilginx_repo_ref                   = "30f20165749a5996d46a35b820b41c33a830327b"
+# gophish_repo_ref                    = "f88b204ee4f266bc7df6c6b954abf7b2e8afc22c"
+# go_version                          = "1.22.5"
+# go_linux_amd64_tarball_sha256       = "904b924d435eaea086515bc63235b192ea441bd8c9b198c507e85009e6e4c7f0"
+# tags = {
+#   Owner      = "RedTeam"
+#   CostCenter = "Security"
+# }
