@@ -20,17 +20,32 @@ runcmd:
   - echo "nameserver 8.8.8.8" > /etc/resolv.conf
   - echo "nameserver 8.8.4.4" >> /etc/resolv.conf
 
-  # Install Go, clone, and build Evilginx
-  # (export/cd must persist, so a single script block is required)
+  # Install Go, clone, and build Evilginx.
+  # cloud-init runs this block with /bin/sh, so keep it POSIX-compatible.
   - |
-    set -euo pipefail
+    set -eu
+
+    retry() {
+      max_attempts="$1"
+      shift
+      attempt=1
+      until "$@"; do
+        if [ "$attempt" -ge "$max_attempts" ]; then
+          echo "Command failed after $attempt attempts: $*"
+          return 1
+        fi
+        attempt=$((attempt + 1))
+        sleep 5
+      done
+    }
 
     GO_VERSION="${go_version}"
     GO_SHA256="${go_linux_amd64_tarball_sha256}"
 
     # Install pinned Go release with checksum verification.
-    curl -fsSL "https://go.dev/dl/go$${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go.tar.gz
+    retry 6 curl -fL "https://go.dev/dl/go$${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go.tar.gz
     echo "$${GO_SHA256}  /tmp/go.tar.gz" | sha256sum -c -
+    rm -rf /usr/local/go
     tar -C /usr/local -xzf /tmp/go.tar.gz
     rm -f /tmp/go.tar.gz
     export HOME=/root
@@ -39,14 +54,17 @@ runcmd:
     export XDG_CACHE_HOME=/root/.cache
     export GOCACHE=/root/.cache/go-build
     mkdir -p "$GOPATH" "$GOCACHE"
-    echo 'export PATH=$PATH:/usr/local/go/bin:/root/go/bin' >> /etc/profile.d/golang.sh
+    echo 'export PATH=$PATH:/usr/local/go/bin:/root/go/bin' > /etc/profile.d/golang.sh
+    chmod 0644 /etc/profile.d/golang.sh
 
-    # Clone and build Evilginx
-    git clone https://github.com/kgretzky/evilginx2.git /opt/evilginx-src
+    # Clone and build Evilginx.
+    rm -rf /opt/evilginx-src
+    retry 6 git clone https://github.com/kgretzky/evilginx2.git /opt/evilginx-src
     cd /opt/evilginx-src
-    git -c advice.detachedHead=false checkout -- "${evilginx_repo_ref}"
-    make
+    git -c advice.detachedHead=false checkout "${evilginx_repo_ref}"
+    retry 3 make
     mkdir -p /opt/evilginx
     cp /opt/evilginx-src/build/evilginx /opt/evilginx/
+    chmod 0755 /opt/evilginx/evilginx
     cp -r /opt/evilginx-src/phishlets /opt/evilginx/
     cp -r /opt/evilginx-src/redirectors /opt/evilginx/

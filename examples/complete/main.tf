@@ -192,6 +192,12 @@ variable "cloudflare_dns_allow_overwrite" {
   default     = false
 }
 
+variable "create_wildcard_evilginx_record" {
+  description = "Create wildcard Cloudflare A record (*.domain_name) for Evilginx."
+  type        = bool
+  default     = false
+}
+
 variable "evilginx_repo_ref" {
   description = "Pinned Evilginx source ref."
   type        = string
@@ -296,6 +302,7 @@ module "redteam" {
   landing_cloudflare_proxied          = var.landing_cloudflare_proxied
   restrict_outbound_traffic           = var.restrict_outbound_traffic
   cloudflare_dns_allow_overwrite      = var.cloudflare_dns_allow_overwrite
+  create_wildcard_evilginx_record     = var.create_wildcard_evilginx_record
   enable_evilginx_managed_identity    = var.enable_evilginx_managed_identity
   enable_gophish_managed_identity     = var.enable_gophish_managed_identity
   log_analytics_workspace_id          = var.log_analytics_workspace_id

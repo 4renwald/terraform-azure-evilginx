@@ -59,17 +59,32 @@ runcmd:
   # Ensure hostname resolves locally (prevents sudo warning noise)
   - grep -q "$(hostname)" /etc/hosts || echo "127.0.1.1 $(hostname)" >> /etc/hosts
 
-  # Install Go, clone, build, and start Gophish — all in one shell
-  # (export/cd must persist, so a single script block is required)
+  # Install Go, clone, build, and start Gophish — all in one shell.
+  # cloud-init runs this block with /bin/sh, so keep it POSIX-compatible.
   - |
-    set -euo pipefail
+    set -eu
+
+    retry() {
+      max_attempts="$1"
+      shift
+      attempt=1
+      until "$@"; do
+        if [ "$attempt" -ge "$max_attempts" ]; then
+          echo "Command failed after $attempt attempts: $*"
+          return 1
+        fi
+        attempt=$((attempt + 1))
+        sleep 5
+      done
+    }
 
     GO_VERSION="${go_version}"
     GO_SHA256="${go_linux_amd64_tarball_sha256}"
 
     # Install pinned Go release with checksum verification.
-    curl -fsSL "https://go.dev/dl/go$${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go.tar.gz
+    retry 6 curl -fL "https://go.dev/dl/go$${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go.tar.gz
     echo "$${GO_SHA256}  /tmp/go.tar.gz" | sha256sum -c -
+    rm -rf /usr/local/go
     tar -C /usr/local -xzf /tmp/go.tar.gz
     rm -f /tmp/go.tar.gz
     export HOME=/root
@@ -78,29 +93,37 @@ runcmd:
     export XDG_CACHE_HOME=/root/.cache
     export GOCACHE=/root/.cache/go-build
     mkdir -p "$GOPATH" "$GOCACHE"
-    echo 'export PATH=$PATH:/usr/local/go/bin:/root/go/bin' >> /etc/profile.d/golang.sh
+    echo 'export PATH=$PATH:/usr/local/go/bin:/root/go/bin' > /etc/profile.d/golang.sh
+    chmod 0644 /etc/profile.d/golang.sh
 
-    # Clone and build the kgretzky fork of Gophish (required for Evilginx integration)
-    git clone https://github.com/kgretzky/gophish.git /opt/gophish-src
+    # Clone and build the kgretzky fork of Gophish (required for Evilginx integration).
+    rm -rf /opt/gophish-src
+    retry 6 git clone https://github.com/kgretzky/gophish.git /opt/gophish-src
     cd /opt/gophish-src
-    git -c advice.detachedHead=false checkout -- "${gophish_repo_ref}"
+    git -c advice.detachedHead=false checkout "${gophish_repo_ref}"
     mkdir -p /opt/gophish
-    go build -o /opt/gophish/gophish .
+    retry 3 /usr/local/go/bin/go build -o /opt/gophish/gophish .
+    chmod 0755 /opt/gophish/gophish
+    test -x /opt/gophish/gophish
 
-    # Generate a self-signed TLS certificate for the admin panel
-    openssl req -newkey rsa:2048 -nodes \
-      -keyout /opt/gophish/gophish_admin.key \
-      -x509 -days 365 \
-      -out /opt/gophish/gophish_admin.crt \
-      -subj "/CN=gophish-admin"
-    chmod 640 /opt/gophish/gophish_admin.key /opt/gophish/gophish_admin.crt
+    # Generate a self-signed TLS certificate for the admin panel when missing.
+    if [ ! -s /opt/gophish/gophish_admin.key ] || [ ! -s /opt/gophish/gophish_admin.crt ]; then
+      openssl req -newkey rsa:2048 -nodes \
+        -keyout /opt/gophish/gophish_admin.key \
+        -x509 -days 365 \
+        -out /opt/gophish/gophish_admin.crt \
+        -subj "/CN=gophish-admin"
+      chmod 640 /opt/gophish/gophish_admin.key /opt/gophish/gophish_admin.crt
+    fi
 
-    # Copy static assets from the source build
+    # Copy static assets from the source build.
     cp -r /opt/gophish-src/static /opt/gophish/
     cp -r /opt/gophish-src/templates /opt/gophish/
     cp -r /opt/gophish-src/db /opt/gophish/
+    cp /opt/gophish-src/VERSION /opt/gophish/
 
-    # Enable and start Gophish service
+    # Enable and start Gophish service.
     systemctl daemon-reload
     systemctl enable gophish.service
-    systemctl start gophish.service
+    systemctl restart gophish.service
+    systemctl --no-pager --full status gophish.service

@@ -8,7 +8,8 @@ Terraform module for authorized client security engagements that deploys a 3-VM 
 
 It also manages Cloudflare DNS:
 
-- Root (`@`) and wildcard (`*`) A records -> Evilginx VM public IP
+- Root (`@`) A record -> Evilginx VM public IP
+- Optional wildcard (`*`) A record -> Evilginx VM public IP (disabled by default)
 - Landing subdomain A records -> Landing VM public IP
 
 ## What You Deploy
@@ -228,6 +229,7 @@ terraform destroy
 | `subnet_address_prefix` | `["10.0.1.0/24"]` | Subnet CIDR blocks |
 | `restrict_outbound_traffic` | `true` | Enable deny-all baseline egress + explicit allows |
 | `cloudflare_dns_allow_overwrite` | `false` | Allow managed Cloudflare records to overwrite existing |
+| `create_wildcard_evilginx_record` | `false` | Create wildcard `*.<domain_name>` A record to Evilginx |
 | `enable_evilginx_managed_identity` | `false` | Enable MSI on Evilginx VM |
 | `enable_gophish_managed_identity` | `false` | Enable MSI on Gophish VM |
 | `log_analytics_workspace_id` | `null` | Optional NSG diagnostics sink |

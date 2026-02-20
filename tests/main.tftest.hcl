@@ -51,8 +51,8 @@ run "validate_plan" {
   }
 
   assert {
-    condition     = cloudflare_record.wildcard.name == "*.test-phishing.example.com"
-    error_message = "Wildcard Cloudflare record should target the module domain."
+    condition     = length(cloudflare_record.wildcard) == 0
+    error_message = "Wildcard Cloudflare record should not be created by default."
   }
 
   assert {

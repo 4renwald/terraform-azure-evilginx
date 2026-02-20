@@ -349,6 +349,12 @@ variable "cloudflare_dns_allow_overwrite" {
   default     = false
 }
 
+variable "create_wildcard_evilginx_record" {
+  description = "Whether to create a wildcard Cloudflare A record (*.domain_name) pointing to the Evilginx public IP."
+  type        = bool
+  default     = false
+}
+
 variable "vnet_address_space" {
   description = "The address space for the Virtual Network."
   type        = list(string)
