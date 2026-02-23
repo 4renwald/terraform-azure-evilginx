@@ -165,19 +165,22 @@ terraform apply
 # Outputs
 terraform output
 
+# Private key path for SSH
+SSH_KEY=~/.ssh/<your-private-key>
+
 # SSH
-ssh azureadmin@$(terraform output -raw evilginx_public_ip)
-ssh azureadmin@$(terraform output -raw gophish_public_ip)
-ssh azureadmin@$(terraform output -raw landing_public_ip)
+ssh -i "$SSH_KEY" azureadmin@$(terraform output -raw evilginx_public_ip)
+ssh -i "$SSH_KEY" azureadmin@$(terraform output -raw gophish_public_ip)
+ssh -i "$SSH_KEY" azureadmin@$(terraform output -raw landing_public_ip)
 
 # Landing TLS check
 curl -I https://$(terraform output -raw landing_fqdn)
 
 # Gophish service check
-ssh azureadmin@$(terraform output -raw gophish_public_ip) 'sudo systemctl status gophish --no-pager'
+ssh -i "$SSH_KEY" azureadmin@$(terraform output -raw gophish_public_ip) 'sudo systemctl status gophish --no-pager'
 
 # Gophish first-login admin password (from startup logs)
-ssh azureadmin@$(terraform output -raw gophish_public_ip) "sudo journalctl -u gophish --no-pager | grep -m1 -E 'Please login with the username|password'"
+ssh -i "$SSH_KEY" azureadmin@$(terraform output -raw gophish_public_ip) "sudo journalctl -u gophish --no-pager | grep -m1 -E 'Please login with the username|password'"
 ```
 
 ### 8. Destroy
