@@ -13,11 +13,18 @@ cloudflare_api_token_key_vault_id = "/subscriptions/<sub>/resourceGroups/<rg>/pr
 # cloudflare_api_token = "REPLACE_ME"
 
 # Optional
-landing_subdomain = "landing"
-landing_additional_subdomains = [
+evilginx_additional_subdomains = [
+  "app",
+  "portal",
+]
+landing_subdomains = [
+  "landing",
   "promo",
   "help",
 ]
+# Alternative legacy-style inputs:
+# landing_subdomain = "landing"
+# landing_additional_subdomains = ["promo", "help"]
 # Optional: provide a local folder that includes index.html and assets/*
 # landing_site_dir = "./landing-site"
 # Optional advanced override: explicit file map (path => base64 file content).

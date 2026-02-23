@@ -3,11 +3,18 @@
 # -----------------------------------------------------------------------------
 
 locals {
+  # Evilginx FQDNs
+  evilginx_additional_fqdns = [
+    for s in var.evilginx_additional_subdomains : "${s}.${var.domain_name}"
+  ]
+  evilginx_all_fqdns = distinct(concat([var.domain_name], local.evilginx_additional_fqdns))
+
   # Landing FQDNs
-  landing_fqdn = "${var.landing_subdomain}.${var.domain_name}"
+  landing_subdomains_effective = length(var.landing_subdomains) > 0 ? var.landing_subdomains : distinct(concat([var.landing_subdomain], var.landing_additional_subdomains))
+  landing_fqdn                 = "${local.landing_subdomains_effective[0]}.${var.domain_name}"
 
   landing_additional_fqdns = [
-    for s in var.landing_additional_subdomains : "${s}.${var.domain_name}"
+    for s in slice(local.landing_subdomains_effective, 1, length(local.landing_subdomains_effective)) : "${s}.${var.domain_name}"
   ]
 
   landing_all_fqdns = distinct(concat([local.landing_fqdn], local.landing_additional_fqdns))

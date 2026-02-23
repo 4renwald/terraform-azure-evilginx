@@ -9,6 +9,7 @@ Terraform module for authorized client security engagements that deploys a 3-VM 
 It also manages Cloudflare DNS:
 
 - Root (`@`) A record -> Evilginx VM public IP
+- Optional additional Evilginx subdomain A records -> Evilginx VM public IP
 - Optional wildcard (`*`) A record -> Evilginx VM public IP (disabled by default)
 - Landing subdomain A records -> Landing VM public IP
 
@@ -200,7 +201,9 @@ terraform destroy
 | `landing_site_files_base64` | No | Optional map of site file paths -> base64 content written to `/var/www/landing` |
 | `cloudflare_api_token_key_vault_id` | Yes (default flow) | Vault ID for auto role assignment to landing MSI |
 | `certbot_email` | Yes | Let's Encrypt registration email |
-| `landing_subdomain` | Yes | Landing subdomain label |
+| `evilginx_additional_subdomains` | No | Additional subdomains routed to Evilginx |
+| `landing_subdomains` | No | Optional full landing subdomain list |
+| `landing_subdomain` | No | Legacy single landing subdomain label |
 | `ubuntu_image_version` | Yes | Must be pinned, `latest` is blocked |
 | `ssh_public_key` | Yes | Public key string |
 | `allowed_ssh_cidr` | Yes | Must be `/24` or narrower; `/32` recommended |
@@ -216,7 +219,9 @@ terraform destroy
 | `cloudflare_api_token_key_vault_id` | `null` | Key Vault ID for landing MSI role assignment |
 | `assign_key_vault_role_to_landing_vm` | `true` | Auto-assign Key Vault Secrets User to landing MSI |
 | `certbot_email` | n/a | Let's Encrypt registration email |
-| `landing_subdomain` | n/a | Primary landing hostname label |
+| `evilginx_additional_subdomains` | `[]` | Additional Evilginx subdomains |
+| `landing_subdomains` | `[]` | Complete landing subdomain list (overrides legacy landing_subdomain + landing_additional_subdomains when set) |
+| `landing_subdomain` | `landing` | Legacy primary landing hostname label |
 | `landing_additional_subdomains` | `[]` | Additional landing hostnames |
 | `landing_cloudflare_proxied` | `true` | Proxy landing DNS records through Cloudflare |
 | `landing_page_html` | built-in HTML | Inline fallback landing page content |
@@ -276,10 +281,11 @@ module "redteam" {
   source = "github.com/4renwald/terraform-azure-evilginx"
 
   domain_name                             = "example.com"
+  evilginx_additional_subdomains          = ["auth", "mail"]
   cloudflare_zone_id                      = "<zone-id>"
   cloudflare_api_token                    = var.cloudflare_api_token
   certbot_email                           = "ops@example.com"
-  landing_subdomain                       = "landing"
+  landing_subdomains                      = ["landing", "promo"]
   landing_site_files_base64               = { for rel in fileset("${path.module}/landing-site", "**") : rel => filebase64("${path.module}/landing-site/${rel}") }
   landing_cloudflare_api_token_secret_uri = "https://<vault>.vault.azure.net/secrets/<secret>/<version>"
   cloudflare_api_token_key_vault_id       = "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.KeyVault/vaults/<vault>"
@@ -292,6 +298,7 @@ module "redteam" {
 ## Outputs
 
 - `evilginx_public_ip`
+- `evilginx_fqdns`
 - `gophish_public_ip`
 - `landing_public_ip`
 - `landing_fqdn`

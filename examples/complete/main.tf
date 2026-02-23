@@ -83,6 +83,12 @@ variable "landing_subdomain" {
   default     = "landing"
 }
 
+variable "landing_subdomains" {
+  description = "Optional complete list of landing subdomains (relative to domain_name)."
+  type        = list(string)
+  default     = []
+}
+
 variable "landing_additional_subdomains" {
   description = "Additional landing subdomains (relative to domain_name) routed to the landing VM."
   type        = list(string)
@@ -135,6 +141,12 @@ variable "evilginx_vm_size" {
   description = "Evilginx VM size."
   type        = string
   default     = "Standard_B2s"
+}
+
+variable "evilginx_additional_subdomains" {
+  description = "Additional Evilginx subdomains (relative to domain_name) routed to the Evilginx VM."
+  type        = list(string)
+  default     = []
 }
 
 variable "gophish_vm_size" {
@@ -287,6 +299,7 @@ module "redteam" {
   certbot_email                           = var.certbot_email
   landing_cloudflare_api_token_secret_uri = var.landing_cloudflare_api_token_secret_uri
   landing_subdomain                       = var.landing_subdomain
+  landing_subdomains                      = var.landing_subdomains
   landing_additional_subdomains           = var.landing_additional_subdomains
   landing_site_files_base64               = local.landing_site_files_base64_effective
 
@@ -303,6 +316,7 @@ module "redteam" {
   restrict_outbound_traffic           = var.restrict_outbound_traffic
   cloudflare_dns_allow_overwrite      = var.cloudflare_dns_allow_overwrite
   create_wildcard_evilginx_record     = var.create_wildcard_evilginx_record
+  evilginx_additional_subdomains      = var.evilginx_additional_subdomains
   enable_evilginx_managed_identity    = var.enable_evilginx_managed_identity
   enable_gophish_managed_identity     = var.enable_gophish_managed_identity
   log_analytics_workspace_id          = var.log_analytics_workspace_id
@@ -322,6 +336,10 @@ module "redteam" {
 
 output "evilginx_public_ip" {
   value = module.redteam.evilginx_public_ip
+}
+
+output "evilginx_fqdns" {
+  value = module.redteam.evilginx_fqdns
 }
 
 output "gophish_public_ip" {

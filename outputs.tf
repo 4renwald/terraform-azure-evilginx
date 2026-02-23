@@ -2,6 +2,11 @@
 # Output Values (alphabetical order)
 # -----------------------------------------------------------------------------
 
+output "evilginx_fqdns" {
+  description = "All FQDNs routed to the Evilginx VM."
+  value       = local.evilginx_all_fqdns
+}
+
 output "evilginx_public_ip" {
   description = "Public IP address of the Evilginx VM."
   value       = azurerm_public_ip.evilginx.ip_address

@@ -95,6 +95,25 @@ variable "evilginx_vm_size" {
   default     = "Standard_B2s"
 }
 
+variable "evilginx_additional_subdomains" {
+  description = "Additional Evilginx subdomains (relative to domain_name) that should route to the Evilginx VM public IP."
+  type        = list(string)
+  default     = []
+
+  validation {
+    condition = alltrue([
+      for s in var.evilginx_additional_subdomains :
+      can(regex("^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$", s)) && !can(regex("[*@]", s))
+    ])
+    error_message = "Each evilginx_additional_subdomains entry must be a valid subdomain name and must not contain '*' or '@'."
+  }
+
+  validation {
+    condition     = length(distinct(var.evilginx_additional_subdomains)) == length(var.evilginx_additional_subdomains)
+    error_message = "evilginx_additional_subdomains must not contain duplicates."
+  }
+}
+
 variable "gophish_repo_ref" {
   description = "Git ref (branch, tag, or commit SHA) to check out when building Gophish from source."
   type        = string
@@ -153,6 +172,25 @@ variable "landing_additional_subdomains" {
   validation {
     condition     = length(distinct(var.landing_additional_subdomains)) == length(var.landing_additional_subdomains)
     error_message = "landing_additional_subdomains must not contain duplicates."
+  }
+}
+
+variable "landing_subdomains" {
+  description = "Optional complete list of landing subdomains (relative to domain_name). When non-empty, this list is used instead of landing_subdomain and landing_additional_subdomains."
+  type        = list(string)
+  default     = []
+
+  validation {
+    condition = alltrue([
+      for s in var.landing_subdomains :
+      can(regex("^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$", s)) && !can(regex("[*@]", s))
+    ])
+    error_message = "Each landing_subdomains entry must be a valid subdomain name and must not contain '*' or '@'."
+  }
+
+  validation {
+    condition     = length(distinct(var.landing_subdomains)) == length(var.landing_subdomains)
+    error_message = "landing_subdomains must not contain duplicates."
   }
 }
 
@@ -228,6 +266,7 @@ variable "landing_site_files_base64" {
 variable "landing_subdomain" {
   description = "Subdomain name for the landing page (relative to domain_name)."
   type        = string
+  default     = "landing"
 
   validation {
     condition     = can(regex("^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$", var.landing_subdomain))
