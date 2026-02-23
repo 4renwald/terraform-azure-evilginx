@@ -321,6 +321,66 @@ resource "azurerm_network_security_group" "gophish" {
   dynamic "security_rule" {
     for_each = var.restrict_outbound_traffic ? [1] : []
     content {
+      name                       = "Allow-SMTP-25-Out"
+      priority                   = 3520
+      direction                  = "Outbound"
+      access                     = "Allow"
+      protocol                   = "Tcp"
+      source_port_range          = "*"
+      destination_port_range     = "25"
+      source_address_prefix      = "*"
+      destination_address_prefix = "Internet"
+    }
+  }
+
+  dynamic "security_rule" {
+    for_each = var.restrict_outbound_traffic ? [1] : []
+    content {
+      name                       = "Allow-SMTPS-465-Out"
+      priority                   = 3521
+      direction                  = "Outbound"
+      access                     = "Allow"
+      protocol                   = "Tcp"
+      source_port_range          = "*"
+      destination_port_range     = "465"
+      source_address_prefix      = "*"
+      destination_address_prefix = "Internet"
+    }
+  }
+
+  dynamic "security_rule" {
+    for_each = var.restrict_outbound_traffic ? [1] : []
+    content {
+      name                       = "Allow-Submission-587-Out"
+      priority                   = 3522
+      direction                  = "Outbound"
+      access                     = "Allow"
+      protocol                   = "Tcp"
+      source_port_range          = "*"
+      destination_port_range     = "587"
+      source_address_prefix      = "*"
+      destination_address_prefix = "Internet"
+    }
+  }
+
+  dynamic "security_rule" {
+    for_each = var.restrict_outbound_traffic ? [1] : []
+    content {
+      name                       = "Allow-SMTP-2525-Out"
+      priority                   = 3523
+      direction                  = "Outbound"
+      access                     = "Allow"
+      protocol                   = "Tcp"
+      source_port_range          = "*"
+      destination_port_range     = "2525"
+      source_address_prefix      = "*"
+      destination_address_prefix = "Internet"
+    }
+  }
+
+  dynamic "security_rule" {
+    for_each = var.restrict_outbound_traffic ? [1] : []
+    content {
       name                       = "Deny-All-Out"
       priority                   = 4096
       direction                  = "Outbound"
