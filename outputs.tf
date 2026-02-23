@@ -22,6 +22,11 @@ output "gophish_public_ip" {
   value       = azurerm_public_ip.gophish.ip_address
 }
 
+output "gophish_private_ip" {
+  description = "Private IP address of the Gophish VM."
+  value       = azurerm_network_interface.gophish.private_ip_address
+}
+
 output "gophish_vm_principal_id" {
   description = "System-assigned managed identity principal ID for the Gophish VM (null when enable_gophish_managed_identity is false)."
   value       = try(azurerm_linux_virtual_machine.gophish.identity[0].principal_id, null)

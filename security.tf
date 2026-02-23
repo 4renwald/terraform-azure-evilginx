@@ -81,6 +81,32 @@ resource "azurerm_network_security_group" "evilginx" {
     destination_address_prefix = "*"
   }
 
+  # Allow private east-west traffic from Gophish.
+  security_rule {
+    name                       = "Allow-Gophish-Private-In"
+    priority                   = 500
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = azurerm_network_interface.gophish.private_ip_address
+    destination_address_prefix = "*"
+  }
+
+  # Allow private east-west traffic to Gophish.
+  security_rule {
+    name                       = "Allow-Gophish-Private-Out"
+    priority                   = 3400
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
+    destination_address_prefix = azurerm_network_interface.gophish.private_ip_address
+  }
+
   dynamic "security_rule" {
     for_each = var.restrict_outbound_traffic ? [1] : []
     content {
@@ -204,6 +230,32 @@ resource "azurerm_network_security_group" "gophish" {
     destination_port_range     = "80"
     source_address_prefix      = "*"
     destination_address_prefix = "*"
+  }
+
+  # Allow private east-west traffic from Evilginx.
+  security_rule {
+    name                       = "Allow-Evilginx-Private-In"
+    priority                   = 400
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = azurerm_network_interface.evilginx.private_ip_address
+    destination_address_prefix = "*"
+  }
+
+  # Allow private east-west traffic to Evilginx.
+  security_rule {
+    name                       = "Allow-Evilginx-Private-Out"
+    priority                   = 3400
+    direction                  = "Outbound"
+    access                     = "Allow"
+    protocol                   = "*"
+    source_port_range          = "*"
+    destination_port_range     = "*"
+    source_address_prefix      = "*"
+    destination_address_prefix = azurerm_network_interface.evilginx.private_ip_address
   }
 
   dynamic "security_rule" {

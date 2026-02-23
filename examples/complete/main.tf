@@ -346,6 +346,10 @@ output "gophish_public_ip" {
   value = module.redteam.gophish_public_ip
 }
 
+output "gophish_private_ip" {
+  value = module.redteam.gophish_private_ip
+}
+
 output "landing_fqdn" {
   value = module.redteam.landing_fqdn
 }

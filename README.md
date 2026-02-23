@@ -54,7 +54,8 @@ flowchart TB
 ```
 
 - SSH access to all VMs is restricted to `allowed_ssh_cidr`.
-- Gophish admin `:3333` is restricted to `allowed_ssh_cidr`.
+- Gophish admin `:3333` is restricted to `allowed_ssh_cidr` for public access, and explicitly allowed from the Evilginx VM private IP for integration.
+- Evilginx and Gophish have explicit NSG allow rules for bidirectional private-IP communication.
 
 ## Quick Start (Recommended)
 
@@ -182,6 +183,9 @@ ssh -i "$SSH_KEY" azureadmin@$(terraform output -raw gophish_public_ip) 'sudo sy
 
 # Gophish first-login admin password (search full service log history)
 ssh -i "$SSH_KEY" azureadmin@$(terraform output -raw gophish_public_ip) "sudo journalctl -u gophish --no-pager --since '1970-01-01' | grep -i 'please login'"
+
+# Gophish private IP for Evilginx integration
+terraform output -raw gophish_private_ip
 ```
 
 ### 8. Destroy
@@ -258,7 +262,7 @@ terraform destroy
 
 ## Security Defaults
 
-- SSH and Gophish admin access restricted to `allowed_ssh_cidr`
+- SSH access is restricted to `allowed_ssh_cidr`; Gophish admin public access is restricted to `allowed_ssh_cidr` with explicit private-IP allow from Evilginx
 - Egress restriction enabled by default (`restrict_outbound_traffic = true`)
 - Cloudflare DNS overwrite disabled by default (`cloudflare_dns_allow_overwrite = false`)
 - Landing certbot token is retrieved from Key Vault at boot (not embedded in Terraform-rendered cloud-init)
@@ -299,6 +303,7 @@ module "redteam" {
 
 - `evilginx_public_ip`
 - `evilginx_fqdns`
+- `gophish_private_ip`
 - `gophish_public_ip`
 - `landing_public_ip`
 - `landing_fqdn`
