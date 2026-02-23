@@ -179,8 +179,8 @@ curl -I https://$(terraform output -raw landing_fqdn)
 # Gophish service check
 ssh -i "$SSH_KEY" azureadmin@$(terraform output -raw gophish_public_ip) 'sudo systemctl status gophish --no-pager'
 
-# Gophish first-login admin password (from startup logs)
-ssh -i "$SSH_KEY" azureadmin@$(terraform output -raw gophish_public_ip) "sudo journalctl -u gophish --no-pager | grep -m1 -E 'Please login with the username|password'"
+# Gophish first-login admin password (search full service log history)
+ssh -i "$SSH_KEY" azureadmin@$(terraform output -raw gophish_public_ip) "sudo journalctl -u gophish --no-pager --since '1970-01-01' | grep -i 'please login'"
 ```
 
 ### 8. Destroy
