@@ -4,6 +4,7 @@
 
 # Root (@) A record -> Evilginx public IP
 resource "cloudflare_record" "root" {
+  count           = var.create_root_evilginx_record ? 1 : 0
   zone_id         = var.cloudflare_zone_id
   name            = var.domain_name
   type            = "A"

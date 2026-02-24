@@ -46,7 +46,12 @@ run "validate_plan" {
   }
 
   assert {
-    condition     = cloudflare_record.root.name == "test-phishing.example.com"
+    condition     = length(cloudflare_record.root) == 1
+    error_message = "Root Cloudflare record should be created by default."
+  }
+
+  assert {
+    condition     = cloudflare_record.root[0].name == "test-phishing.example.com"
     error_message = "Root Cloudflare record should target the module domain."
   }
 
@@ -73,5 +78,18 @@ run "validate_plan" {
   assert {
     condition     = cloudflare_record.landing_subdomains["promo.test-phishing.example.com"].name == "promo.test-phishing.example.com"
     error_message = "Landing Cloudflare record should exist for landing_subdomains."
+  }
+}
+
+run "validate_plan_without_root_record" {
+  command = plan
+
+  variables {
+    create_root_evilginx_record = false
+  }
+
+  assert {
+    condition     = length(cloudflare_record.root) == 0
+    error_message = "Root Cloudflare record should not be created when create_root_evilginx_record is false."
   }
 }

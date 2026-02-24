@@ -388,6 +388,12 @@ variable "cloudflare_dns_allow_overwrite" {
   default     = false
 }
 
+variable "create_root_evilginx_record" {
+  description = "Whether to create a root Cloudflare A record (@ / domain_name) pointing to the Evilginx public IP."
+  type        = bool
+  default     = true
+}
+
 variable "create_wildcard_evilginx_record" {
   description = "Whether to create a wildcard Cloudflare A record (*.domain_name) pointing to the Evilginx public IP."
   type        = bool

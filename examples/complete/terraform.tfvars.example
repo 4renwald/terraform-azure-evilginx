@@ -17,6 +17,7 @@ evilginx_additional_subdomains = [
   "app",
   "portal",
 ]
+
 landing_subdomains = [
   "landing",
   "promo",
@@ -53,6 +54,7 @@ landing_subdomains = [
 # enable_gophish_managed_identity     = false
 # landing_cloudflare_proxied          = true
 # cloudflare_dns_allow_overwrite      = false
+# create_root_evilginx_record         = true
 # restrict_outbound_traffic           = true
 # log_analytics_workspace_id          = "/subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.OperationalInsights/workspaces/<workspace>"
 # evilginx_repo_ref                   = "30f20165749a5996d46a35b820b41c33a830327b"
