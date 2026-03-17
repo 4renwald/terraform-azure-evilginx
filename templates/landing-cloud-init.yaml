@@ -1,0 +1,132 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+packages:
+  - nginx
+  - certbot
+  - python3-certbot-dns-cloudflare
+  - curl
+  - jq
+  - ca-certificates
+
+write_files:
+%{ for f in landing_site_files ~}
+  - path: /var/www/landing/${f.path}
+    owner: root:root
+    permissions: "0644"
+    encoding: b64
+    content: ${f.content_b64}
+%{ endfor ~}
+
+  - path: /etc/nginx/sites-available/landing-http.conf
+    owner: root:root
+    permissions: "0644"
+    content: |
+      server {
+        listen 80;
+        listen [::]:80;
+        server_name ${landing_server_names};
+
+        root /var/www/landing;
+        index index.html;
+
+        location / {
+          try_files $uri $uri/ =404;
+        }
+      }
+
+  - path: /etc/nginx/sites-available/landing-https.conf
+    owner: root:root
+    permissions: "0644"
+    content: |
+      server {
+        listen 80;
+        listen [::]:80;
+        server_name ${landing_server_names};
+        return 301 https://$host$request_uri;
+      }
+
+      server {
+        listen 443 ssl http2;
+        listen [::]:443 ssl http2;
+        server_name ${landing_server_names};
+
+        ssl_certificate /etc/letsencrypt/live/${landing_primary_fqdn}/fullchain.pem;
+        ssl_certificate_key /etc/letsencrypt/live/${landing_primary_fqdn}/privkey.pem;
+
+        root /var/www/landing;
+        index index.html;
+
+        location / {
+          try_files $uri $uri/ =404;
+        }
+      }
+
+  - path: /etc/letsencrypt/renewal-hooks/deploy/reload-nginx.sh
+    owner: root:root
+    permissions: "0755"
+    content: |
+      #!/usr/bin/env bash
+      set -eu
+      systemctl reload nginx
+
+runcmd:
+  # Ensure hostname resolves locally (prevents sudo warning noise)
+  - grep -q "$(hostname)" /etc/hosts || echo "127.0.1.1 $(hostname)" >> /etc/hosts
+
+  - mkdir -p /var/www/landing
+  - mkdir -p /etc/letsencrypt
+  - rm -f /etc/nginx/sites-enabled/default
+  - ln -sf /etc/nginx/sites-available/landing-http.conf /etc/nginx/sites-enabled/landing.conf
+  - nginx -t
+  - systemctl enable --now nginx
+
+  # Fetch Cloudflare token from Key Vault using the VM managed identity.
+  # Includes retries to tolerate RBAC propagation delays after role assignment.
+  - |
+    set -euo pipefail
+
+    KEY_VAULT_SECRET_URI="${landing_cloudflare_api_token_secret_uri}"
+    RETRIES=40
+    SLEEP_SECONDS=15
+
+    for i in $(seq 1 "$${RETRIES}"); do
+      MSI_TOKEN="$(curl -sS --fail -H Metadata:true 'http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https%3A%2F%2Fvault.azure.net' | jq -r '.access_token // empty' || true)"
+      if [ -n "$${MSI_TOKEN}" ]; then
+        CF_TOKEN="$(curl -sS --fail -H "Authorization: Bearer $${MSI_TOKEN}" "$${KEY_VAULT_SECRET_URI}?api-version=7.4" | jq -r '.value // empty' || true)"
+        if [ -n "$${CF_TOKEN}" ]; then
+          install -m 600 -o root -g root /dev/null /etc/letsencrypt/cloudflare.ini
+          printf 'dns_cloudflare_api_token = %s\n' "$${CF_TOKEN}" > /etc/letsencrypt/cloudflare.ini
+          break
+        fi
+      fi
+
+      if [ "$${i}" -eq "$${RETRIES}" ]; then
+        echo "Failed to fetch Cloudflare token from Key Vault after $${RETRIES} attempts." >&2
+        exit 1
+      fi
+      sleep "$${SLEEP_SECONDS}"
+    done
+
+  # Obtain certificate via Cloudflare DNS-01 challenge with retry/backoff.
+  - |
+    set -euo pipefail
+    CERTBOT_RETRIES=5
+    CERTBOT_SLEEP_SECONDS=30
+
+    for i in $(seq 1 "$${CERTBOT_RETRIES}"); do
+      if certbot certonly --dns-cloudflare --dns-cloudflare-credentials /etc/letsencrypt/cloudflare.ini --dns-cloudflare-propagation-seconds 60 --non-interactive --agree-tos --email ${certbot_email} ${landing_certbot_domain_args}; then
+        break
+      fi
+
+      if [ "$${i}" -eq "$${CERTBOT_RETRIES}" ]; then
+        echo "Certbot DNS-01 issuance failed after $${CERTBOT_RETRIES} attempts." >&2
+        exit 1
+      fi
+      sleep "$${CERTBOT_SLEEP_SECONDS}"
+    done
+
+  - ln -sf /etc/nginx/sites-available/landing-https.conf /etc/nginx/sites-enabled/landing.conf
+  - nginx -t
+  - systemctl reload nginx
