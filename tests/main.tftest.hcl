@@ -46,6 +46,11 @@ run "validate_plan" {
   }
 
   assert {
+    condition     = can(regex("set -eu", base64decode(azurerm_linux_virtual_machine.landing.custom_data))) && !can(regex("pipefail", base64decode(azurerm_linux_virtual_machine.landing.custom_data)))
+    error_message = "Landing cloud-init should stay POSIX-compatible under cloud-init runcmd and must not rely on pipefail."
+  }
+
+  assert {
     condition     = length(cloudflare_record.root) == 1
     error_message = "Root Cloudflare record should be created by default."
   }

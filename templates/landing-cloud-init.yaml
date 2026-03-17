@@ -84,8 +84,9 @@ runcmd:
 
   # Fetch Cloudflare token from Key Vault using the VM managed identity.
   # Includes retries to tolerate RBAC propagation delays after role assignment.
+  # cloud-init runs this block with /bin/sh, so keep it POSIX-compatible.
   - |
-    set -euo pipefail
+    set -eu
 
     KEY_VAULT_SECRET_URI="${landing_cloudflare_api_token_secret_uri}"
     RETRIES=40
@@ -110,8 +111,9 @@ runcmd:
     done
 
   # Obtain certificate via Cloudflare DNS-01 challenge with retry/backoff.
+  # cloud-init runs this block with /bin/sh, so keep it POSIX-compatible.
   - |
-    set -euo pipefail
+    set -eu
     CERTBOT_RETRIES=5
     CERTBOT_SLEEP_SECONDS=30
 
