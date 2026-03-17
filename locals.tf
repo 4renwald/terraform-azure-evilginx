@@ -44,7 +44,7 @@ locals {
 
   common_tags = merge(
     {
-      Project     = "RedTeam-PhishingSim"
+      Project     = "PhishingSim"
       ManagedBy   = "Terraform"
       Environment = "Assessment"
     },

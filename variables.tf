@@ -70,7 +70,7 @@ variable "domain_name" {
   type        = string
 
   validation {
-    condition     = can(regex("^[a-z0-9][a-z0-9.-]+\\.[a-z]{2,}$", var.domain_name))
+    condition     = can(regex("^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$", var.domain_name))
     error_message = "domain_name must be a valid domain (e.g. example.com)."
   }
 }
@@ -329,7 +329,7 @@ variable "log_analytics_workspace_id" {
 variable "prefix" {
   description = "Prefix to append to resource names for uniqueness."
   type        = string
-  default     = "redteam"
+  default     = "phishsim"
 
   validation {
     condition     = can(regex("^[a-z0-9-]{1,20}$", var.prefix))
@@ -340,7 +340,7 @@ variable "prefix" {
 variable "resource_group_name" {
   description = "Name of the Azure Resource Group."
   type        = string
-  default     = "rg-redteam-phishing"
+  default     = "rg-phishsim"
 }
 
 variable "restrict_outbound_traffic" {

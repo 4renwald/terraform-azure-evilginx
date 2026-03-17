@@ -80,7 +80,7 @@ provider "azurerm" {
 
 provider "cloudflare" {}
 
-module "redteam" {
+module "phishsim" {
   source = "github.com/4renwald/terraform-azure-evilginx"
 
   allowed_ssh_cidr                        = "203.0.113.10/32"
@@ -100,47 +100,47 @@ module "redteam" {
 }
 
 output "evilginx_fqdns" {
-  value = module.redteam.evilginx_fqdns
+  value = module.phishsim.evilginx_fqdns
 }
 
 output "evilginx_public_ip" {
-  value = module.redteam.evilginx_public_ip
+  value = module.phishsim.evilginx_public_ip
 }
 
 output "evilginx_vm_principal_id" {
-  value = module.redteam.evilginx_vm_principal_id
+  value = module.phishsim.evilginx_vm_principal_id
 }
 
 output "gophish_private_ip" {
-  value = module.redteam.gophish_private_ip
+  value = module.phishsim.gophish_private_ip
 }
 
 output "gophish_public_ip" {
-  value = module.redteam.gophish_public_ip
+  value = module.phishsim.gophish_public_ip
 }
 
 output "gophish_vm_principal_id" {
-  value = module.redteam.gophish_vm_principal_id
+  value = module.phishsim.gophish_vm_principal_id
 }
 
 output "landing_fqdn" {
-  value = module.redteam.landing_fqdn
+  value = module.phishsim.landing_fqdn
 }
 
 output "landing_fqdns" {
-  value = module.redteam.landing_fqdns
+  value = module.phishsim.landing_fqdns
 }
 
 output "landing_public_ip" {
-  value = module.redteam.landing_public_ip
+  value = module.phishsim.landing_public_ip
 }
 
 output "landing_url" {
-  value = module.redteam.landing_url
+  value = module.phishsim.landing_url
 }
 
 output "landing_vm_principal_id" {
-  value = module.redteam.landing_vm_principal_id
+  value = module.phishsim.landing_vm_principal_id
 }
 ```
 
@@ -217,8 +217,8 @@ The example adds one convenience input that is not part of the root module inter
 | `landing_vm_size` | `string` | `"Standard_B2s"` | Azure VM size for the landing server |
 | `location` | `string` | `"East US"` | Azure region for all resources |
 | `log_analytics_workspace_id` | `string` | `null` | Optional Log Analytics workspace resource ID for NSG diagnostics |
-| `prefix` | `string` | `"redteam"` | Prefix token used in resource names |
-| `resource_group_name` | `string` | `"rg-redteam-phishing"` | Azure resource group name |
+| `prefix` | `string` | `"phishsim"` | Prefix token used in resource names |
+| `resource_group_name` | `string` | `"rg-phishsim"` | Azure resource group name |
 | `restrict_outbound_traffic` | `bool` | `true` | Apply explicit outbound allow rules and a deny-all outbound baseline |
 | `subnet_address_prefix` | `list(string)` | `["10.0.1.0/24"]` | Subnet CIDR list |
 | `tags` | `map(string)` | `{}` | Additional tags merged with the module defaults |

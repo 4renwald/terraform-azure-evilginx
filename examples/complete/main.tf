@@ -1,4 +1,4 @@
-module "redteam" {
+module "phishsim" {
   source = "../.."
 
   admin_username                          = var.admin_username

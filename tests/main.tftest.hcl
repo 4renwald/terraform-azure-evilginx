@@ -26,7 +26,7 @@ run "validate_plan" {
   command = plan
 
   assert {
-    condition     = azurerm_resource_group.main.name == "rg-redteam-phishing"
+    condition     = azurerm_resource_group.main.name == "rg-phishsim"
     error_message = "Resource group name should use the default value."
   }
 
@@ -97,4 +97,14 @@ run "validate_plan_without_root_record" {
     condition     = length(cloudflare_record.root) == 0
     error_message = "Root Cloudflare record should not be created when create_root_evilginx_record is false."
   }
+}
+
+run "reject_invalid_domain_name" {
+  command = plan
+
+  variables {
+    domain_name = "bad..example.com"
+  }
+
+  expect_failures = [var.domain_name]
 }

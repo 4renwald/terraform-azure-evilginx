@@ -189,13 +189,13 @@ variable "log_analytics_workspace_id" {
 variable "prefix" {
   description = "Resource name prefix."
   type        = string
-  default     = "redteam"
+  default     = "phishsim"
 }
 
 variable "resource_group_name" {
   description = "Azure resource group name."
   type        = string
-  default     = "rg-redteam-phishing"
+  default     = "rg-phishsim"
 }
 
 variable "restrict_outbound_traffic" {
@@ -220,7 +220,7 @@ variable "tags" {
   type        = map(string)
   default = {
     CostCenter = "Security"
-    Owner      = "RedTeam"
+    Owner      = "PhishingSim"
   }
 }
 
