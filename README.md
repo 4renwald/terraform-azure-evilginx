@@ -164,6 +164,43 @@ The example adds one convenience input that is not part of the root module inter
 
 - `landing_site_dir`: local directory path converted into `landing_site_files_base64`
 
+## SSH Access and GoPhish Port Forwarding
+
+Run these commands from your caller root after `terraform apply` completes. In this repository, that is typically `examples/complete`.
+
+If you changed `admin_username`, replace `azureadmin` below with your configured SSH user.
+
+```bash
+export SSH_USER="azureadmin"
+export EVILGINX_IP="$(terraform output -raw evilginx_public_ip)"
+export GOPHISH_IP="$(terraform output -raw gophish_public_ip)"
+export LANDING_IP="$(terraform output -raw landing_public_ip)"
+```
+
+Quick SSH access to each VM:
+
+```bash
+ssh "${SSH_USER}@${EVILGINX_IP}"
+ssh "${SSH_USER}@${GOPHISH_IP}"
+ssh "${SSH_USER}@${LANDING_IP}"
+```
+
+To reach the GoPhish admin dashboard from your computer, create an SSH tunnel to the Gophish VM and keep that terminal open:
+
+```bash
+ssh -N -L 3333:127.0.0.1:3333 "${SSH_USER}@${GOPHISH_IP}"
+```
+
+Then open `https://127.0.0.1:3333` in your browser. GoPhish is configured with a self-signed admin certificate by default, so your browser will show a certificate warning until you replace it with your own cert.
+
+If local port `3333` is already in use, change only the left side of the forward. For example:
+
+```bash
+ssh -N -L 8443:127.0.0.1:3333 "${SSH_USER}@${GOPHISH_IP}"
+```
+
+Then browse to `https://127.0.0.1:8443` instead.
+
 ## Behavior Notes
 
 - `landing_subdomains` takes precedence over `landing_subdomain` and `landing_additional_subdomains` when it is non-empty.
