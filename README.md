@@ -98,6 +98,50 @@ module "redteam" {
   ssh_public_key       = file("~/.ssh/id_ed25519.pub")
   ubuntu_image_version = "22.04.202501150"
 }
+
+output "evilginx_fqdns" {
+  value = module.redteam.evilginx_fqdns
+}
+
+output "evilginx_public_ip" {
+  value = module.redteam.evilginx_public_ip
+}
+
+output "evilginx_vm_principal_id" {
+  value = module.redteam.evilginx_vm_principal_id
+}
+
+output "gophish_private_ip" {
+  value = module.redteam.gophish_private_ip
+}
+
+output "gophish_public_ip" {
+  value = module.redteam.gophish_public_ip
+}
+
+output "gophish_vm_principal_id" {
+  value = module.redteam.gophish_vm_principal_id
+}
+
+output "landing_fqdn" {
+  value = module.redteam.landing_fqdn
+}
+
+output "landing_fqdns" {
+  value = module.redteam.landing_fqdns
+}
+
+output "landing_public_ip" {
+  value = module.redteam.landing_public_ip
+}
+
+output "landing_url" {
+  value = module.redteam.landing_url
+}
+
+output "landing_vm_principal_id" {
+  value = module.redteam.landing_vm_principal_id
+}
 ```
 
 The module is intentionally backend-free. Configure remote state in your caller root if you need it.
